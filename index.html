@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGB Webcam Filter</title>
+    <title>Filtro Webcam RGB</title>
     <style>
         * {
             margin: 0;
@@ -291,38 +291,38 @@
 </head>
 <body>
     <div class="container">
-        <h1>RGB Webcam Filter</h1>
+        <h1>Filtro Webcam RGB</h1>
 
         <div class="video-section">
             <div class="video-box">
-                <h3>Original Stream</h3>
+                <h3>Flusso Originale</h3>
                 <canvas id="canvasOriginal"></canvas>
             </div>
             <div class="video-box">
-                <h3>RGB Mask</h3>
+                <h3>Maschera RGB</h3>
                 <canvas id="canvasMask"></canvas>
             </div>
             <div class="video-box">
-                <h3>Masked Stream</h3>
+                <h3>Flusso Mascherato</h3>
                 <canvas id="canvasMasked"></canvas>
             </div>
         </div>
 
         <div class="controls-section">
-            <h2>Controls</h2>
+            <h2>Controlli</h2>
 
             <div class="camera-select-group">
-                <label for="cameraSelect">Camera:</label>
+                <label for="cameraSelect">Telecamera:</label>
                 <select id="cameraSelect">
-                    <option value="">Loading cameras...</option>
+                    <option value="">Caricamento telecamere...</option>
                 </select>
-                <button onclick="startCamera()">Change Camera</button>
+                <button onclick="startCamera()">Cambia Telecamera</button>
             </div>
 
             <div class="control-group">
                 <div class="slider-group">
                     <div class="slider-label">
-                        <span>Red Range (0-255)</span>
+                        <span>Intervallo Rosso (0-255)</span>
                         <div class="slider-values">
                             <span id="redMinVal">0</span>
                             <span>-</span>
@@ -341,7 +341,7 @@
 
                 <div class="slider-group">
                     <div class="slider-label">
-                        <span>Green Range (0-255)</span>
+                        <span>Intervallo Verde (0-255)</span>
                         <div class="slider-values">
                             <span id="greenMinVal">0</span>
                             <span>-</span>
@@ -360,7 +360,7 @@
 
                 <div class="slider-group">
                     <div class="slider-label">
-                        <span>Blue Range (0-255)</span>
+                        <span>Intervallo Blu (0-255)</span>
                         <div class="slider-values">
                             <span id="blueMinVal">0</span>
                             <span>-</span>
@@ -379,7 +379,7 @@
             </div>
 
             <div class="button-group">
-                <button onclick="resetFilters()">Reset Filter</button>
+                <button onclick="resetFilters()">Ripristina Filtro</button>
             </div>
         </div>
     </div>
@@ -449,7 +449,7 @@
                 video.play();
             } catch (err) {
                 console.error('Error accessing camera:', err);
-                alert('Unable to access camera. Please check permissions.');
+                alert('Impossibile accedere alla telecamera. Controlla i permessi.');
             }
         }
 
