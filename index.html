@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RGB Webcam Filter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .video-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .video-box {
+            background: #2a2a2a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-box h3 {
+            padding: 12px;
+            background: #333;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #000;
+        }
+
+        #video {
+            display: none;
+        }
+
+        .controls-section {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls-section h2 {
+            margin-bottom: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #aaa;
+        }
+
+        .slider-values {
+            display: flex;
+            gap: 10px;
+            font-size: 13px;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .slider-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .channel-gradient-bar {
+            height: 20px;
+            border-radius: 3px;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .red-gradient {
+            background: linear-gradient(to right, rgb(0, 0, 0), rgb(255, 0, 0));
+        }
+
+        .green-gradient {
+            background: linear-gradient(to right, rgb(0, 0, 0), rgb(0, 255, 0));
+        }
+
+        .blue-gradient {
+            background: linear-gradient(to right, rgb(0, 0, 0), rgb(0, 0, 255));
+        }
+
+        .channel-range-overlay {
+            position: absolute;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+            transition: all 0.05s linear;
+        }
+
+        .channel-range-overlay-left {
+            left: 0;
+        }
+
+        .channel-range-overlay-right {
+            right: 0;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #444;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0f0;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0f0;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 6px;
+            background: #333;
+            border: 1px solid #444;
+            color: #0f0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #0f0;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #0f0;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #0d0;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        select {
+            padding: 8px 12px;
+            background: #333;
+            color: #0f0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #0f0;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+        }
+
+        .camera-select-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .camera-select-group label {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #aaa;
+        }
+
+        .camera-select-group select {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        @media (max-width: 768px) {
+            .video-section {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .control-group {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RGB Webcam Filter</h1>
+
+        <div class="video-section">
+            <div class="video-box">
+                <h3>Original Stream</h3>
+                <canvas id="canvasOriginal"></canvas>
+            </div>
+            <div class="video-box">
+                <h3>RGB Mask</h3>
+                <canvas id="canvasMask"></canvas>
+            </div>
+            <div class="video-box">
+                <h3>Masked Stream</h3>
+                <canvas id="canvasMasked"></canvas>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <h2>Controls</h2>
+
+            <div class="camera-select-group">
+                <label for="cameraSelect">Camera:</label>
+                <select id="cameraSelect">
+                    <option value="">Loading cameras...</option>
+                </select>
+                <button onclick="startCamera()">Change Camera</button>
+            </div>
+
+            <div class="control-group">
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Red Range (0-255)</span>
+                        <div class="slider-values">
+                            <span id="redMinVal">0</span>
+                            <span>-</span>
+                            <span id="redMaxVal">255</span>
+                        </div>
+                    </div>
+                    <div class="channel-gradient-bar red-gradient">
+                        <div class="channel-range-overlay channel-range-overlay-left" id="redOverlayLeft"></div>
+                        <div class="channel-range-overlay channel-range-overlay-right" id="redOverlayRight"></div>
+                    </div>
+                    <div class="slider-inputs">
+                        <input type="range" id="redMin" min="0" max="255" value="0">
+                        <input type="range" id="redMax" min="0" max="255" value="255">
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Green Range (0-255)</span>
+                        <div class="slider-values">
+                            <span id="greenMinVal">0</span>
+                            <span>-</span>
+                            <span id="greenMaxVal">255</span>
+                        </div>
+                    </div>
+                    <div class="channel-gradient-bar green-gradient">
+                        <div class="channel-range-overlay channel-range-overlay-left" id="greenOverlayLeft"></div>
+                        <div class="channel-range-overlay channel-range-overlay-right" id="greenOverlayRight"></div>
+                    </div>
+                    <div class="slider-inputs">
+                        <input type="range" id="greenMin" min="0" max="255" value="0">
+                        <input type="range" id="greenMax" min="0" max="255" value="255">
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Blue Range (0-255)</span>
+                        <div class="slider-values">
+                            <span id="blueMinVal">0</span>
+                            <span>-</span>
+                            <span id="blueMaxVal">255</span>
+                        </div>
+                    </div>
+                    <div class="channel-gradient-bar blue-gradient">
+                        <div class="channel-range-overlay channel-range-overlay-left" id="blueOverlayLeft"></div>
+                        <div class="channel-range-overlay channel-range-overlay-right" id="blueOverlayRight"></div>
+                    </div>
+                    <div class="slider-inputs">
+                        <input type="range" id="blueMin" min="0" max="255" value="0">
+                        <input type="range" id="blueMax" min="0" max="255" value="255">
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button onclick="resetFilters()">Reset Filter</button>
+            </div>
+        </div>
+    </div>
+
+    <video id="video"></video>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvasOriginal = document.getElementById('canvasOriginal');
+        const canvasMask = document.getElementById('canvasMask');
+        const canvasMasked = document.getElementById('canvasMasked');
+
+        const ctxOriginal = canvasOriginal.getContext('2d');
+        const ctxMask = canvasMask.getContext('2d');
+        const ctxMasked = canvasMasked.getContext('2d');
+
+        const redMin = document.getElementById('redMin');
+        const redMax = document.getElementById('redMax');
+        const greenMin = document.getElementById('greenMin');
+        const greenMax = document.getElementById('greenMax');
+        const blueMin = document.getElementById('blueMin');
+        const blueMax = document.getElementById('blueMax');
+
+        let selectedDeviceId = null;
+
+        // Initialize camera list
+        async function initializeCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(device => device.kind === 'videoinput');
+                const cameraSelect = document.getElementById('cameraSelect');
+                
+                cameraSelect.innerHTML = '';
+                cameras.forEach(camera => {
+                    const option = document.createElement('option');
+                    option.value = camera.deviceId;
+                    option.textContent = camera.label || `Camera ${cameras.indexOf(camera) + 1}`;
+                    cameraSelect.appendChild(option);
+                });
+
+                if (cameras.length > 0) {
+                    selectedDeviceId = cameras[0].deviceId;
+                    cameraSelect.value = selectedDeviceId;
+                }
+
+                cameraSelect.addEventListener('change', (e) => {
+                    selectedDeviceId = e.target.value;
+                });
+            } catch (err) {
+                console.error('Error enumerating cameras:', err);
+            }
+        }
+
+        // Start camera stream
+        async function startCamera() {
+            try {
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+
+                const constraints = {
+                    video: { deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined }
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                video.play();
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                alert('Unable to access camera. Please check permissions.');
+            }
+        }
+
+        // Check if RGB values are within range
+        function isInRgbRange(r, g, b, rMin, rMax, gMin, gMax, bMin, bMax) {
+            return r >= rMin && r <= rMax && 
+                   g >= gMin && g <= gMax && 
+                   b >= bMin && b <= bMax;
+        }
+
+        // Process video frame
+        function processFrame() {
+            if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+                requestAnimationFrame(processFrame);
+                return;
+            }
+
+            const width = video.videoWidth;
+            const height = video.videoHeight;
+
+            // Set canvas dimensions
+            canvasOriginal.width = width;
+            canvasOriginal.height = height;
+            canvasMask.width = width;
+            canvasMask.height = height;
+            canvasMasked.width = width;
+            canvasMasked.height = height;
+
+            // Draw original stream
+            ctxOriginal.drawImage(video, 0, 0);
+            const originalImageData = ctxOriginal.getImageData(0, 0, width, height);
+
+            // Get current filter values
+            const rMin = parseFloat(redMin.value);
+            const rMax = parseFloat(redMax.value);
+            const gMin = parseFloat(greenMin.value);
+            const gMax = parseFloat(greenMax.value);
+            const bMin = parseFloat(blueMin.value);
+            const bMax = parseFloat(blueMax.value);
+
+            // Create mask and masked image data
+            const maskData = ctxMask.createImageData(width, height);
+            const maskedImageData = ctxMasked.createImageData(width, height);
+
+            const origData = originalImageData.data;
+            const maskPixels = maskData.data;
+            const maskedPixels = maskedImageData.data;
+
+            for (let i = 0; i < origData.length; i += 4) {
+                const r = origData[i];
+                const g = origData[i + 1];
+                const b = origData[i + 2];
+                const a = origData[i + 3];
+
+                const inRange = isInRgbRange(r, g, b, rMin, rMax, gMin, gMax, bMin, bMax);
+
+                if (inRange) {
+                    // Pixel is in range
+                    maskPixels[i] = 255;
+                    maskPixels[i + 1] = 255;
+                    maskPixels[i + 2] = 255;
+                    maskPixels[i + 3] = 255;
+
+                    maskedPixels[i] = r;
+                    maskedPixels[i + 1] = g;
+                    maskedPixels[i + 2] = b;
+                    maskedPixels[i + 3] = a;
+                } else {
+                    // Pixel is out of range
+                    maskPixels[i] = 0;
+                    maskPixels[i + 1] = 0;
+                    maskPixels[i + 2] = 0;
+                    maskPixels[i + 3] = 255;
+
+                    maskedPixels[i] = 0;
+                    maskedPixels[i + 1] = 0;
+                    maskedPixels[i + 2] = 0;
+                    maskedPixels[i + 3] = 255;
+                }
+            }
+
+            ctxMask.putImageData(maskData, 0, 0);
+            ctxMasked.putImageData(maskedImageData, 0, 0);
+
+            requestAnimationFrame(processFrame);
+        }
+
+        // Update slider values
+        function updateSliderValues() {
+            document.getElementById('redMinVal').textContent = redMin.value;
+            document.getElementById('redMaxVal').textContent = redMax.value;
+            document.getElementById('greenMinVal').textContent = greenMin.value;
+            document.getElementById('greenMaxVal').textContent = greenMax.value;
+            document.getElementById('blueMinVal').textContent = blueMin.value;
+            document.getElementById('blueMaxVal').textContent = blueMax.value;
+
+            // Update channel range overlays
+            updateChannelOverlay('red', parseFloat(redMin.value), parseFloat(redMax.value), 255);
+            updateChannelOverlay('green', parseFloat(greenMin.value), parseFloat(greenMax.value), 255);
+            updateChannelOverlay('blue', parseFloat(blueMin.value), parseFloat(blueMax.value), 255);
+        }
+
+        function updateChannelOverlay(channel, min, max, maxValue) {
+            const overlayLeft = document.getElementById(channel + 'OverlayLeft');
+            const overlayRight = document.getElementById(channel + 'OverlayRight');
+            
+            const channelWidthPercent = (100 / maxValue);
+            const leftPercent = min * channelWidthPercent;
+            const rightPercent = 100 - (max * channelWidthPercent);
+
+            overlayLeft.style.width = leftPercent + '%';
+            overlayRight.style.width = rightPercent + '%';
+        }
+
+        // Reset filters
+        function resetFilters() {
+            redMin.value = 0;
+            redMax.value = 255;
+            greenMin.value = 0;
+            greenMax.value = 255;
+            blueMin.value = 0;
+            blueMax.value = 255;
+            updateSliderValues();
+        }
+
+        // Event listeners
+        redMin.addEventListener('input', updateSliderValues);
+        redMax.addEventListener('input', updateSliderValues);
+        greenMin.addEventListener('input', updateSliderValues);
+        greenMax.addEventListener('input', updateSliderValues);
+        blueMin.addEventListener('input', updateSliderValues);
+        blueMax.addEventListener('input', updateSliderValues);
+
+        // Initialize on load
+        window.addEventListener('load', async () => {
+            await initializeCameras();
+            await startCamera();
+            processFrame();
+        });
+    </script>
+</body>
+</html>
